@@ -6,11 +6,12 @@ style guide. This is the style guide for the layer nobody named.**
 
 A spec says what to build. A task is the piece of it you hand a single
 loop, the unit that gets marked done. Spec-driven development, as
-GitHub's Spec Kit popularized it, walks you from a spec, through a
-plan, into a numbered task list, and then hands that list to an agent.
-It built the layer below the spec and never named it. Task Grammar
-governs that layer: what makes one task well-formed for a reader that
-is not human.
+GitHub's [Spec Kit](https://github.com/github/spec-kit) popularized it,
+walks you from a spec, through a plan, into a numbered task list, and
+then hands that list to an agent. It organizes that list well (see
+Lineage below), and it never names a discipline for the unit inside
+it. Task Grammar governs that unit: what makes one task well-formed
+for a reader that is not human.
 
 ## The membership test
 
@@ -68,12 +69,47 @@ shoulders and differs in exactly one assumption, the reader.
   alive today inside AI tooling. Assumes a human reader.
 - **INVEST** (agile): what makes a user story well-formed. Assumes a
   human team with shared memory.
-- **GitHub Spec Kit**: `/speckit.specify` to `/speckit.plan` to
-  `/speckit.tasks`. Produces the artifact this grammar governs, and
-  does not state rules for what makes one task in that list
-  well-formed.
 - **@tasks-md/lint** and structural task linters: check the shape of a
   tasks file, not the grammar of the work inside it.
+
+### The nearest neighbor: GitHub Spec Kit
+
+[Spec Kit](https://github.com/github/spec-kit) is the toolkit that made
+spec-driven development a named practice: `/speckit.specify` through
+`/speckit.plan` to `/speckit.tasks`, running across 30+ coding agents,
+with a
+[written methodology](https://github.com/github/spec-kit/blob/main/spec-driven.md)
+and a constitution of project principles. Credit where due: its tasks
+template DOES prescribe structure for the task list. Unique IDs, `[P]`
+markers for parallel-safe tasks, user-story grouping with independent
+checkpoints, explicit dependency ordering, a warning against "vague
+tasks", and the instruction to "include exact file paths in
+descriptions". That last one matters here: a second team, working from
+spec-side reasoning, independently converged on naming the files a task
+touches. This grammar reads that as validation of rule 3, not as
+competition.
+
+The difference is which layer the rules govern and which reader they
+assume. Spec Kit's task rules organize the LIST: ordering, grouping,
+parallelism, traceability to stories. They are good rules, and nearly
+all of them would improve a sprint backlog handed to a human team,
+which is exactly the membership test failing. What the template leaves
+unaddressed is the set that exists because the reader is an LLM:
+per-task verification is absent and tests are "OPTIONAL - only include
+them if explicitly requested" (rule 2 here holds that a task without a
+runnable check ends with a claim); no cold-start declarations (rule 1);
+no model-relative sizing (rule 7); no treatment of prohibitions versus
+allowlists (rule 3, beyond the file-path convergence); no restating of
+constraints that must survive the run (rule 4). Its `/speckit.analyze`
+command checks artifacts against each other for coverage and
+consistency, which is the closest thing in the ecosystem to a task
+check, and it still checks the list against the spec, not the task
+against the reader.
+
+So the relationship is complementary by construction: Spec Kit
+generates and organizes the artifact; Task Grammar governs the units
+inside it. Run both. Its `[P]` markers and dependency ordering are
+orchestration concerns this grammar deliberately does not duplicate.
 
 The rules here were extracted from a production app factory that
 machine-lints its task files (every task carries a file allowlist and
