@@ -1,48 +1,66 @@
 # Task Grammar
 
-**The rules for how the units of work you hand an AI agent should be
-written. English is the new programming language; it shipped without a
-style guide. This is the style guide for the layer nobody named.**
+**Seven rules for writing tasks that AI coding agents can actually
+execute.**
 
-A spec says what to build. A task is the piece of it you hand a single
-loop, the unit that gets marked done. Spec-driven development, as
-GitHub's [Spec Kit](https://github.com/github/spec-kit) popularized it,
-walks you from a spec, through a plan, into a numbered task list, and
-then hands that list to an agent. It organizes that list well (see
-Lineage below), and it never names a discipline for the unit inside
-it. Task Grammar governs that unit: what makes one task well-formed
-for a reader that is not human.
+Here is the workflow this fits into. You write a spec. The spec gets
+split into a task list, usually a `TASKS.md`. An agent picks up the
+tasks one at a time and builds them. Task Grammar governs the middle
+artifact: how each task should be written so the agent executes it
+correctly, instead of guessing, drifting, or claiming success it
+cannot prove.
 
-## The membership test
+English is the new programming language; it shipped without a style
+guide. This is the style guide for the layer nobody named.
 
-A rule belongs in Task Grammar only if it is true *because the reader
-is an LLM*. If it would improve a ticket handed to a junior developer
-just as much, it is good writing advice, and good writing advice
-already exists. What is left after that filter is a grammar for a
-reader with no memory of yesterday, a fixed window of attention, and a
-habit of sounding confident either way.
+## The problem, in one example
 
-## The seven rules
+This is how task lists are usually written:
 
-Every rule is a relationship, never a constant. A grammar with
-constants in it dies with the next model release; the ratios survive.
+```
+- [ ] Add CSV export like we discussed
+- [ ] Wire up the export button, don't touch the billing module
+- [ ] Make sure everything works
+```
 
-| # | Rule | The relationship | Why it is LLM-native |
-|---|------|------------------|----------------------|
-| 1 | **Declare the cold start** | Every task carries its own opening state: the files that matter, the decisions it depends on, what the last task left behind. | The agent that picks up task six was not in the room for task five. Human teams amortize context; agents cannot. |
-| 2 | **End with a check the agent can run** | A task closes with a self-executable verification. The weaker the model, the more executable (versus judgment-based) the check must be. | An LLM reports success either way. A runnable check converts a claim into a fact. |
-| 3 | **Fence scope by naming what is in, not what is out** | Scope is an allowlist of files and areas. Translate any "do not touch X" into the list of what may be touched. | Telling the model not to touch X places X squarely in its attention. A human hears a prohibition; an LLM hears a topic. |
-| 4 | **Restate the load-bearing constraint** | A constraint that must survive the whole run is repeated in the task even when the spec already states it, and because the spec already states it. | Attention decays with distance. An instruction from the top of a long run is a whisper by the middle of it. |
-| 5 | **Spend the word budget where the ambiguity is** | Task prose competes with code for the same context window. Detail pays exactly where a human would have asked a question. | The model does not stop to ask. It resolves ambiguity by guessing, in full confidence. |
-| 6 | **Let the artifact carry the state** | No task may reference the conversation. Every task boundary is a context wipe; state passes through files. | "As discussed" points at a discussion the executing agent never had. |
-| 7 | **Size to the engine** | The one-pass budget (the largest chunk one loop reliably finishes) scales with model capability. A size constant is wrong within a model generation. | An oversized task loses the thread and stalls; an undersized one spends more on spin-up than on work. The right size is real but relative to who is driving. |
+An agent will happily run this list and report success. The defects
+surface later, at machine speed:
 
-## The two skills
+- "like we discussed" points at a conversation the executing agent
+  never had, so it invents one.
+- "don't touch the billing module" puts billing squarely into the
+  agent's attention. A human hears a prohibition; an LLM hears a topic.
+- "make sure everything works" lets the agent declare victory without
+  proof. LLMs report success either way.
+
+The same first task with the grammar applied:
+
+```
+- [ ] T1.1: Add a CSV export endpoint for the expense report
+  - Files: src/api/reports.ts, src/services/exportService.ts (new),
+    tests/exportService.test.ts (new)
+  - Opens: the report data shape is defined in src/types/report.ts;
+    no export code exists yet
+  - Constraint: amounts are formatted from the stored integer cents,
+    never from the floating-point display value
+  - Verification: npm test -- exportService exits 0, and the new test
+    asserts a row with amount_cents=1050 exports as "10.50"
+```
+
+Now the task carries its own starting state, fences scope by naming
+what MAY be touched, restates the one constraint that must survive,
+and ends with a check the agent can run. The full worked pair, all
+three tasks with every change explained, is in
+[`examples/weak-and-strong.md`](examples/weak-and-strong.md).
+
+## What you get
+
+Two skills. One writes task lists, one grades them.
 
 | Skill | Job | When |
 |-------|-----|------|
-| [`compose-tasks`](skills/compose-tasks/SKILL.md) | Generate a task list from a spec, with the grammar applied at write time. | You have a spec and need the TASKS.md an agent will execute. |
-| [`task-grammar`](skills/task-grammar/SKILL.md) | Review an existing task list against the seven rules: a scorecard (verifiability, statefulness, scope discipline, fit), a readiness gate, and per-task rewrites. Also works backward from a failed run via its symptom index. | The tasks already exist, written by you or by another agent; or a loop run went wrong and you want to know which rule broke. |
+| [`compose-tasks`](skills/compose-tasks/SKILL.md) | Turn a spec into a TASKS.md with the grammar applied at write time. | You have a spec and need the task list an agent will execute. |
+| [`task-grammar`](skills/task-grammar/SKILL.md) | Review an existing task list against the seven rules. Returns a scorecard (verifiability, statefulness, scope discipline, fit), a READY / FIX FIRST / RECOMPOSE verdict, and corrected task lines ready to paste. Also works backward from a failed run: symptom in, broken rule out. | The tasks already exist, written by you or by another agent; or a loop run went wrong and you want to know why. |
 
 The review skill is deliberately Grammarly-shaped: scored dimensions
 with honest calibration, findings that quote the offending line and
@@ -54,7 +72,7 @@ They assume the split that is coming either way: increasingly, agents
 write the task lists and humans review them. `compose-tasks` teaches
 the writing agent the grammar; `task-grammar` arms the reviewer.
 
-## Install
+## Quick start
 
 As a Claude Code plugin (the repo doubles as its own marketplace):
 
@@ -72,6 +90,42 @@ cp -r task-grammar/skills/* ~/.claude/skills/
 
 Or per-project: copy into `<project>/.claude/skills/`. The skills are
 plain markdown and portable to any tool that reads skill files.
+
+Then ask in plain words:
+
+- "Turn this spec into tasks" or "compose the tasks for SPEC.md"
+- "Check my TASKS.md" or "are these tasks ready to run?"
+- "The loop failed halfway; which task broke it?"
+
+## Why tasks need their own grammar
+
+An AI agent reads differently than a person. It has no memory of
+yesterday: the agent executing task six was not in the room for task
+five, or for the conversation that produced the spec. It has a fixed
+window of attention: an instruction from the top of a long run is a
+whisper by the middle of it. And it sounds confident either way: where
+a person would stop and ask, it guesses and keeps going.
+
+That difference is the membership test for this grammar. A rule
+belongs in Task Grammar only if it is true *because the reader is an
+LLM*. If it would improve a ticket handed to a junior developer just
+as much, it is good writing advice, and good writing advice already
+exists.
+
+## The seven rules
+
+Every rule is a relationship, never a constant. A grammar with
+constants in it dies with the next model release; the ratios survive.
+
+| # | Rule | The relationship | Why it is LLM-native |
+|---|------|------------------|----------------------|
+| 1 | **Declare the cold start** | Every task carries its own opening state: the files that matter, the decisions it depends on, what the last task left behind. | The agent that picks up task six was not in the room for task five. Human teams amortize context; agents cannot. |
+| 2 | **End with a check the agent can run** | A task closes with a self-executable verification. The weaker the model, the more executable (versus judgment-based) the check must be. | An LLM reports success either way. A runnable check converts a claim into a fact. |
+| 3 | **Fence scope by naming what is in, not what is out** | Scope is an allowlist of files and areas. Translate any "do not touch X" into the list of what may be touched. | Telling the model not to touch X places X squarely in its attention. A human hears a prohibition; an LLM hears a topic. |
+| 4 | **Restate the load-bearing constraint** | A constraint that must survive the whole run is repeated in the task even when the spec already states it, and because the spec already states it. | Attention decays with distance. An instruction from the top of a long run is a whisper by the middle of it. |
+| 5 | **Spend the word budget where the ambiguity is** | Task prose competes with code for the same context window. Detail pays exactly where a human would have asked a question. | The model does not stop to ask. It resolves ambiguity by guessing, in full confidence. |
+| 6 | **Let the artifact carry the state** | No task may reference the conversation. Every task boundary is a context wipe; state passes through files. | "As discussed" points at a discussion the executing agent never had. |
+| 7 | **Size to the engine** | The one-pass budget (the largest chunk one loop reliably finishes) scales with model capability. A size constant is wrong within a model generation. | An oversized task loses the thread and stalls; an undersized one spends more on spin-up than on work. The right size is real but relative to who is driving. |
 
 ## Lineage
 
