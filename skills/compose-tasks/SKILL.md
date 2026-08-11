@@ -1,6 +1,16 @@
 ---
 name: compose-tasks
-description: Generate a task list (TASKS.md) from a spec with Task Grammar applied at write time. Use when the user has a spec, requirements doc, or build brief and needs the executable task list an agent (or a queue of agents) will run. Every emitted task declares its cold start, carries a file allowlist, restates any load-bearing constraint, and ends with exactly one runnable verification.
+description: Generate a task list (TASKS.md) from a spec with Task Grammar applied at write time. Use when the user has a spec, requirements doc, or build brief and needs the executable task list an agent (or a queue of agents) will run. Every emitted task declares its cold start, carries a file allowlist, restates any load-bearing constraint, and ends with exactly one runnable verification. Trigger with phrases like "compose the tasks", "turn this spec into tasks", "write the TASKS.md". Pass the spec path as args.
+allowed-tools: Read, Write, Edit, Grep, Glob
+version: 2.0.0
+license: MIT
+author: Silviu Nedea <https://github.com/snedea>
+tags:
+- tasks
+- agents
+- spec-driven
+- codegen
+compatibility: Designed for Claude Code; portable to any tool that reads skill files
 ---
 
 # Compose Tasks
@@ -10,6 +20,15 @@ no memory of the conversation that produced the spec, a fixed attention
 window, and no ability to ask a clarifying question mid-run. Every task
 you emit must survive being read cold, alone, by a different model than
 you.
+
+## Prerequisites
+
+- A spec, requirements doc, or build brief exists as a file. If the
+  requirements live only in the conversation, write them to a spec
+  file first; a task list composed from chat memory violates rule 6
+  before the first task is written.
+- The executing model tier is known, or the user has been asked (see
+  step 2 below).
 
 ## Before writing anything
 
@@ -98,3 +117,17 @@ constraints restated, detail placed at ambiguity, zero conversation
 references, sized to the declared engine. Fix violations before
 presenting. Study `examples/weak-and-strong.md` in this repo for a
 worked pair; the strong version is the target shape.
+
+Then present the list with the scorecard the `task-grammar` skill
+defines (Verifiability, Statefulness, Scope discipline, Fit, each
+0-100, plus the gate verdict). A composed list should score READY; if
+your own scoring says FIX FIRST, fix it before returning, not after.
+
+## Next steps
+
+- An independent pass with the `task-grammar` skill catches what
+  self-review misses, especially when a different agent (or the human)
+  runs it: the composing agent grading its own work is the weakest
+  form of review.
+- After the loop runs the list, the loop's claims need falsifying;
+  that is doubt-in-the-loop's job, downstream of this skill.

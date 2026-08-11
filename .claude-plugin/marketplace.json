@@ -1,0 +1,14 @@
+{
+  "name": "task-grammar",
+  "owner": {
+    "name": "Silviu Nedea",
+    "url": "https://github.com/snedea"
+  },
+  "plugins": [
+    {
+      "name": "task-grammar",
+      "source": "./",
+      "description": "Seven rules for writing the units of work you hand an AI agent. compose-tasks applies the grammar at write time; task-grammar scores an existing task list (verifiability, statefulness, scope discipline, fit) with a readiness gate before a loop runs it."
+    }
+  ]
+}

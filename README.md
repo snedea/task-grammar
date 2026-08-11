@@ -42,7 +42,13 @@ constants in it dies with the next model release; the ratios survive.
 | Skill | Job | When |
 |-------|-----|------|
 | [`compose-tasks`](skills/compose-tasks/SKILL.md) | Generate a task list from a spec, with the grammar applied at write time. | You have a spec and need the TASKS.md an agent will execute. |
-| [`task-grammar`](skills/task-grammar/SKILL.md) | Review an existing task list against the seven rules, before a loop runs it. | The tasks already exist, written by you or by another agent. |
+| [`task-grammar`](skills/task-grammar/SKILL.md) | Review an existing task list against the seven rules: a scorecard (verifiability, statefulness, scope discipline, fit), a readiness gate, and per-task rewrites. Also works backward from a failed run via its symptom index. | The tasks already exist, written by you or by another agent; or a loop run went wrong and you want to know which rule broke. |
+
+The review skill is deliberately Grammarly-shaped: scored dimensions
+with honest calibration, findings that quote the offending line and
+teach the rule, and a gate that a fake verification caps regardless of
+the other scores. Same concept, different grammar; the reader it
+protects is an LLM, not a human.
 
 They assume the split that is coming either way: increasingly, agents
 write the task lists and humans review them. `compose-tasks` teaches
@@ -50,7 +56,14 @@ the writing agent the grammar; `task-grammar` arms the reviewer.
 
 ## Install
 
-Copy the skill folders into your agent's skills directory:
+As a Claude Code plugin (the repo doubles as its own marketplace):
+
+```
+/plugin marketplace add snedea/task-grammar
+/plugin install task-grammar@task-grammar
+```
+
+Or copy the skill folders into your agent's skills directory:
 
 ```
 git clone https://github.com/snedea/task-grammar
